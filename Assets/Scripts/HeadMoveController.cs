@@ -6,29 +6,35 @@ public class HeadMoveController : BodyPart
 {
     [HideInInspector]
     public UnityEvent loseGame;
+    public GameController gameController;
     private PlayerInputs inputs;
-    override public void Init(int _speed)
+    private void switchDirection(Vector2 _direction)
     {
-        base.Init(_speed);
-        nextBody?.Init(_speed);
-    }
-    private void switchDirection(Vector2 _direction){
-        if(direction == Vector2.zero){
-            nextBody?.SetDirection(transform.position, _direction);
-            direction = _direction;
-        }
-        if((direction.x != -_direction.x)&&(direction.y != -_direction.y)){
+        if (((localDirection.x != -_direction.x) && (localDirection.y != -_direction.y)) || (direction == Vector2.zero))
+        {
+            canMove = true;
             direction = _direction;
         }
     }
-
-    private void OnCollisionEnter2D(Collision2D other) {
-        Apple ifApple = other.gameObject.GetComponent<Apple>();
-        if (ifApple != null){
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        Apple_start ifApple = other.gameObject.GetComponent<Apple_start>();
+        if (ifApple != null)
+        {
+            gameController.returnToFree(ifApple.GetTransformPos());
+            ifApple.apple_Goal.SetActive(true);
             ifApple.eatApple.Invoke();
-        } else {
-            loseGame.Invoke();
+            return;
         }
+        Apple_goal ifAppleGoal = other.gameObject.GetComponent<Apple_goal>();
+        if (ifAppleGoal != null)
+        {
+            gameController.returnToFree(ifAppleGoal.GetTransformPos());
+            gameController.addScore(ifAppleGoal.Score);
+            ifAppleGoal.getGoal.Invoke();
+            return;
+        }
+        loseGame.Invoke();
     }
 
     private void OnEnable()
